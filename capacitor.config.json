@@ -1,0 +1,6 @@
+{
+  "appId": "diegy.ciekawy.info",
+  "appName": "Diegy",
+  "bundledWebRuntime": false,
+  "webDir": "build"
+}
