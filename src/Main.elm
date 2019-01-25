@@ -9,6 +9,8 @@ import Browser exposing
 import Html exposing (Html, div, h1, img, node, text)
 import Html.Events exposing (onClick)
 
+import Ion
+
 
 ---- MODEL ----
 
@@ -51,8 +53,8 @@ view : Model -> Html Msg
 view model =
     div []
         [ Html.p [] [ text "Elm is here!" ]
-        , node "ion-button" [ onClick Increment ] [ text "+" ]
-        , node "ion-button" [ onClick Decrement ] [ text "-" ]
+        , Ion.button [ onClick Increment ] [ text "+" ]
+        , Ion.button [ onClick Decrement ] [ text "-" ]
         , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
         ]
 
