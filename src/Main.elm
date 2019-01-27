@@ -6,8 +6,13 @@ import Browser exposing
   , element
   , document)
 
-import Html exposing (Html, div, h1, img, node, text)
+import Html exposing (Html, div, h2, h4, p, img, text)
+--import Html.Keyed as HtmlKeyed
+import Html.Keyed exposing (node)
+import Html.Lazy as Lazy
+
 import Html.Events exposing (onClick)
+import Html.Attributes exposing (attribute)
 
 import Ion
 
@@ -127,18 +132,69 @@ update msg model =
 
 ---- VIEW ----
 
+viewCount : Int -> Html Msg
+viewCount counter = node "h2" [] [ ("asdasd", text <| "Count is " ++ String.fromInt counter )]
+
+
 view : Model -> Html Msg
 view model =
-    div []
+--    Ion.app []
+--        [ Ion.header []
+--            [ Ion.toolbar [ Ion.color "primary" ]
+--                [ Ion.title []
+--                    [ text "Diegy" ]
+--                ]
+--            , Ion.toolbar []
+--                [ Ion.searchbar []
+--                    []
+--                ]
+--            ]
+--        ,
+        Ion.content [] [
+            Ion.list []
+                [ Ion.header [] [ text "results:" ]
+                , Ion.item [] [ ("ii", node "ion-label" []
+                    [ ("qwe", div []
+                    [ Lazy.lazy viewCount model.counter
+                    , h4 [] [ text "score: score" ]
+                    , p [] [ text "description" ]
+                    ])]
+                )]
+                ]
+            , div []
                 [ Html.p [] [ text "Elm is here!" ]
                 , Ion.button [ onClick Increment ] [ text "+" ]
                 , Ion.button [ onClick Decrement ] [ text "-" ]
                 , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
---                , Html.p [] [ text <| "Yelp responses " ++ String.fromInt (
---                    Maybe.withDefault 0 (
---                        Maybe.withDefault { business = Nothing, total = Just 0} model.businesses).total) ]
                 ]
-
+        ]
+--    ]
+--    Ion.app []
+--        [ Ion.header []
+--            [ Ion.toolbar [ Ion.color "primary" ]
+--                [ Ion.title []
+--                    [ text "Diegy" ]
+--                ]
+--            , Ion.toolbar []
+--                [ Ion.searchbar []
+--                    []
+--                ]
+--            ]
+--        , Ion.content [ attribute "padding" "" ]
+--            [ Ion.list []
+--                [ Ion.header []
+--                    [ text "results:" ]
+--                , Ion.item []
+--                    [ h2 [] [ text <| "Count is " ++ String.fromInt model.counter ]
+--                    , h4 [] [ text "score: {{score}}" ]
+--                    , p [] [ text "{{description}}" ]
+--                    ]
+--                ]
+--            ]
+--            , Ion.button [ onClick Increment ] [ text "+" ]
+--            , Ion.button [ onClick Decrement ] [ text "-" ]
+--            , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
+--        ]
 
 main : Program () Model Msg
 main =

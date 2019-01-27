@@ -1,6 +1,7 @@
 module Ion exposing (..)
 
 import Html exposing (Attribute, Html)
+--import Html.Keyed exposing (node)
 
 import Json.Encode as Json
 
@@ -32,13 +33,13 @@ searchbar : List (Attribute msg) -> List (Html msg) -> Html msg
 searchbar =
     Elm.Kernel.VirtualDom.node "ion-searchbar"
 
-list : List (Attribute msg) -> List (String, Html msg) -> Html msg
+list : List (Attribute msg) -> List (Html msg) -> Html msg
 list =
     Elm.Kernel.VirtualDom.node "ion-list"
 
 item : List (Attribute msg) -> List (String, Html msg) -> Html msg
 item =
-    Elm.Kernel.VirtualDom.node "ion-item"
+    Elm.Kernel.VirtualDom.keyedNode "ion-item"
 
 
 -- attributes
