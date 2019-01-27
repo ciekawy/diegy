@@ -11,9 +11,13 @@ import Html.Events exposing (onClick)
 
 import Ion
 
+import Graphql.Document as Document
+import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
+
+import RemoteData exposing (RemoteData)
 
 import YelpApi.Query as Query
 import YelpApi.Object.Business as Business
@@ -37,38 +41,62 @@ query = (Query.search queryArgs) businessesSelection
 --Query.search (identity { location = "Guadalajara" }) businessSelection
 
 type alias BusinessFragment = {
-    name : String
-    , rating : Float}
+    name : Maybe String,
+    rating : Maybe Float
+    }
 
 type alias BusinessesFragment = {
-   business: List BusinessFragment
-   , total : Int}
+   business: Maybe (List (Maybe BusinessFragment)),
+   total : Maybe Int
+   }
 
 businessesSelection : SelectionSet BusinessesFragment YelpApi.Object.Businesses
 businessesSelection =
-    SelectionSet.succeed BusinessesFragment
-        |> with Businesses.total
-        |> with businessSelection
+    SelectionSet.map2 BusinessesFragment
+        (Businesses.business businessSelection)
+        Businesses.total
+--    SelectionSet.succeed BusinessesFragment
+--        |> with Businesses.total
+--        |> with businessSelection
 
 
 businessSelection : SelectionSet BusinessFragment YelpApi.Object.Business
 businessSelection =
-    SelectionSet.succeed BusinessFragment
-        |> with Business.name
-        |> with Business.rating
+    SelectionSet.map2 BusinessFragment
+        Business.name
+        Business.rating
+
+--    SelectionSet.succeed BusinessFragment
+--        |> with Business.name
+--        |> with Business.rating
+
+makeRequest : Cmd YelpMsg
+makeRequest =
+    query
+        |> Graphql.Http.queryRequest "https://api.yelp.com/v3/graphql"
+        |> Graphql.Http.withHeader "Authorization"
+            "Bearer 3siexgIFYuO7pvr2qvCaVvjqS_23dEHjbfuWJ5eGpapEM-HCSeghF2YA6qeTlSd6yEWUfPwG3q7hZzlgI8za4NQy5HhJsdwMes8LVvVbUKkXynJPGcku89wEf_dIXHYx"
+        |> Graphql.Http.send (RemoteData.fromResult >> GotResponse)
+
+type YelpMsg
+    = GotResponse YelpModel
+
+type alias YelpModel =
+    RemoteData (Graphql.Http.Error Response) Response
 
 ---- MODEL ----
 
 
 type alias Model =
-    { counter : Int
+    {
+    counter : Int,
+    businesses: Maybe BusinessesFragment
     }
 
 
 init : flags -> ( Model, Cmd Msg )
 init flags =
-  ( { counter = 0 }, Cmd.none )
-
+  ( { counter = 0, businesses = Nothing }, Cmd.none )
 
 
 ---- UPDATE ----
@@ -97,11 +125,11 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ Html.p [] [ text "Elm is here!" ]
-        , Ion.button [ onClick Increment ] [ text "+" ]
-        , Ion.button [ onClick Decrement ] [ text "-" ]
-        , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
-        ]
+                [ Html.p [] [ text "Elm is here!" ]
+                , Ion.button [ onClick Increment ] [ text "+" ]
+                , Ion.button [ onClick Decrement ] [ text "-" ]
+                , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
+                ]
 
 
 main : Program () Model Msg
