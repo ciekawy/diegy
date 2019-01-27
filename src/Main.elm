@@ -6,19 +6,22 @@ import Browser exposing
   , element
   , document)
 
-import Html exposing (Html, div, h2, h4, p, img, text)
---import Html.Keyed as HtmlKeyed
-import Html.Keyed exposing (node)
-import Html.Lazy as Lazy
+import Html exposing (Html, div, h2, h4, p, img, text, node)
+import Html.Keyed as HtmlKeyed
+--import Html.Keyed exposing (node)
+import Html.Lazy exposing (lazy)
 
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (attribute)
+
+import Json.Decode
 
 import Ion
 
 import Graphql.Document as Document
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
+import Graphql.OptionalArgument exposing (fromMaybe)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
 
@@ -32,11 +35,11 @@ import YelpApi.Object
 
 type alias Response = Maybe BusinessesFragment
 
-queryArgs : Query.SearchOptionalArguments -> Query.SearchOptionalArguments
-queryArgs args = { args | location = Present "Guadalajara" }
+queryArgs : Maybe String -> Query.SearchOptionalArguments -> Query.SearchOptionalArguments
+queryArgs searchTerm = (\args -> { args | term = fromMaybe searchTerm, location = Present "Guadalajara" })
 
-query : SelectionSet Response RootQuery
-query = (Query.search queryArgs) businessesSelection
+query : Maybe String -> SelectionSet Response RootQuery
+query searchTerm = (Query.search (queryArgs searchTerm)) businessesSelection
 --    SelectionSet.succeed BusinessFragment
 --        |> with (Query.search (identity { location = "Guadalajara" })
 --            |> with Business.name
@@ -60,9 +63,6 @@ businessesSelection =
     SelectionSet.map2 BusinessesFragment
         (Businesses.business businessSelection)
         Businesses.total
---    SelectionSet.succeed BusinessesFragment
---        |> with Businesses.total
---        |> with businessSelection
 
 
 businessSelection : SelectionSet BusinessFragment YelpApi.Object.Business
@@ -71,13 +71,10 @@ businessSelection =
         Business.name
         Business.rating
 
---    SelectionSet.succeed BusinessFragment
---        |> with Business.name
---        |> with Business.rating
-
-makeRequest : Cmd Msg
-makeRequest =
-    query
+makeRequest : Maybe String -> Cmd Msg
+makeRequest searchTerm =
+    searchTerm
+        |> query
         |> Graphql.Http.queryRequest "https://cors-anywhere.herokuapp.com/https://api.yelp.com/v3/graphql"
         |> Graphql.Http.withHeader "Accept-Language" "en_US"
 --        |> Graphql.Http.withCredentials
@@ -95,28 +92,35 @@ type alias YelpModel =
 type alias Model =
     {
     counter : Int,
-    yelpData: RemoteData (Graphql.Http.Error Response) Response
+    yelpData: Maybe BusinessesFragment -- TODO support response here to handle errors
     }
 
 
 init : flags -> ( Model, Cmd Msg )
 init _ =
-  ( { counter = 0, yelpData = RemoteData.Loading }, makeRequest )
+  ( {
+  counter = 0,
+--  yelpData = RemoteData.Loading
+  yelpData = Maybe.Nothing
+  }, makeRequest Nothing )
 
 
 ---- UPDATE ----
-
+keyedNode = Elm.Kernel.VirtualDom.keyedNode
 
 type Msg
     = NoOp
     | Increment
     | Decrement
     | GotResponse YelpModel
+    | Change String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Change value ->
+            (model, makeRequest (Just value))
         NoOp ->
             (model, Cmd.none)
 
@@ -126,19 +130,47 @@ update msg model =
         Decrement ->
             ({ model | counter = model.counter - 1 }, Cmd.batch [])
 
-        GotResponse businessesFragment ->
-            ({ model | counter = 0 }, Cmd.batch [])
+        GotResponse remoteData ->
+            case remoteData of
+                RemoteData.Success response ->
+                    ({ model | yelpData = response  }, Cmd.batch [])
+                _ ->
+                    ({ model | yelpData = Maybe.Nothing  }, Cmd.batch [])
 -- ignore for a while
 
 ---- VIEW ----
 
 viewCount : Int -> Html Msg
-viewCount counter = node "h2" [] [ ("asdasd", text <| "Count is " ++ String.fromInt counter )]
+viewCount counter = keyedNode "h2" [] [ ("asdasd", text <| "Count is " ++ String.fromInt counter )]
 
+emptyBusinessesFragment : BusinessesFragment
+emptyBusinessesFragment = {
+    business = Just [],
+    total = Maybe.Just 0}
+
+emptyBusiness : BusinessFragment
+emptyBusiness = { name = Nothing, rating = Nothing }
+
+
+yelpResultView : Maybe BusinessFragment -> (String, Html Msg)
+yelpResultView business =
+    ("", Ion.row [] [
+        Ion.col [ Html.Attributes.style "text-align" "left"] [ text ("" ++ ((business |> Maybe.withDefault emptyBusiness).name |> Maybe.withDefault "")) ],
+        Ion.col [] [ text ("" ++ String.fromFloat ((business |> Maybe.withDefault emptyBusiness).rating |> Maybe.withDefault 0)) ]
+    ])
+
+yelpResultsView : BusinessesFragment -> Html Msg
+yelpResultsView yelp =
+    Ion.grid []
+        (List.map yelpResultView ((yelp.business |> Maybe.withDefault [Just emptyBusiness])))
+
+
+--dbg : String -> Msg
+--dbg str = Debug.log str, "asd"
 
 view : Model -> Html Msg
 view model =
---    Ion.app []
+--    div []
 --        [ Ion.header []
 --            [ Ion.toolbar [ Ion.color "primary" ]
 --                [ Ion.title []
@@ -151,21 +183,18 @@ view model =
 --            ]
 --        ,
         Ion.content [] [
-            Ion.list []
-                [ Ion.header [] [ text "results:" ]
-                , Ion.item [] [ ("ii", node "ion-label" []
-                    [ ("qwe", div []
-                    [ Lazy.lazy viewCount model.counter
-                    , h4 [] [ text "score: score" ]
-                    , p [] [ text "description" ]
-                    ])]
-                )]
-                ]
+            Ion.searchbar [
+                attribute "debounce" "1000",
+                Ion.ionChange Change
+            ] []
+            , lazy yelpResultsView (model.yelpData |> Maybe.withDefault emptyBusinessesFragment)
             , div []
-                [ Html.p [] [ text "Elm is here!" ]
+                [ Html.p [] [ text ("Elm is here! results:" ++ String.fromInt (
+                    Maybe.withDefault 0 (
+                        Maybe.withDefault emptyBusinessesFragment model.yelpData).total)) ]
                 , Ion.button [ onClick Increment ] [ text "+" ]
                 , Ion.button [ onClick Decrement ] [ text "-" ]
-                , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
+                , lazy viewCount model.counter
                 ]
         ]
 --    ]
