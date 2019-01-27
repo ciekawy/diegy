@@ -70,16 +70,16 @@ businessSelection =
 --        |> with Business.name
 --        |> with Business.rating
 
-makeRequest : Cmd YelpMsg
+makeRequest : Cmd Msg
 makeRequest =
     query
-        |> Graphql.Http.queryRequest "https://api.yelp.com/v3/graphql"
+        |> Graphql.Http.queryRequest "https://cors-anywhere.herokuapp.com/https://api.yelp.com/v3/graphql"
+        |> Graphql.Http.withHeader "Accept-Language" "en_US"
+--        |> Graphql.Http.withCredentials
         |> Graphql.Http.withHeader "Authorization"
             "Bearer 3siexgIFYuO7pvr2qvCaVvjqS_23dEHjbfuWJ5eGpapEM-HCSeghF2YA6qeTlSd6yEWUfPwG3q7hZzlgI8za4NQy5HhJsdwMes8LVvVbUKkXynJPGcku89wEf_dIXHYx"
+--        |> Graphql.Http.withHeader "Access-Control-Allow-Origin" "localhost:3333"
         |> Graphql.Http.send (RemoteData.fromResult >> GotResponse)
-
-type YelpMsg
-    = GotResponse YelpModel
 
 type alias YelpModel =
     RemoteData (Graphql.Http.Error Response) Response
@@ -90,13 +90,13 @@ type alias YelpModel =
 type alias Model =
     {
     counter : Int,
-    businesses: Maybe BusinessesFragment
+    yelpData: RemoteData (Graphql.Http.Error Response) Response
     }
 
 
 init : flags -> ( Model, Cmd Msg )
-init flags =
-  ( { counter = 0, businesses = Nothing }, Cmd.none )
+init _ =
+  ( { counter = 0, yelpData = RemoteData.Loading }, makeRequest )
 
 
 ---- UPDATE ----
@@ -106,6 +106,7 @@ type Msg
     = NoOp
     | Increment
     | Decrement
+    | GotResponse YelpModel
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -120,6 +121,10 @@ update msg model =
         Decrement ->
             ({ model | counter = model.counter - 1 }, Cmd.batch [])
 
+        GotResponse businessesFragment ->
+            ({ model | counter = 0 }, Cmd.batch [])
+-- ignore for a while
+
 ---- VIEW ----
 
 view : Model -> Html Msg
@@ -129,6 +134,9 @@ view model =
                 , Ion.button [ onClick Increment ] [ text "+" ]
                 , Ion.button [ onClick Decrement ] [ text "-" ]
                 , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
+--                , Html.p [] [ text <| "Yelp responses " ++ String.fromInt (
+--                    Maybe.withDefault 0 (
+--                        Maybe.withDefault { business = Nothing, total = Just 0} model.businesses).total) ]
                 ]
 
 
