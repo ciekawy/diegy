@@ -7,8 +7,6 @@ import Browser exposing
   , document)
 
 import Html exposing (Html, div, h2, h4, p, img, text, node)
-import Html.Keyed as HtmlKeyed
---import Html.Keyed exposing (node)
 import Html.Lazy exposing (lazy)
 
 import Html.Events exposing (onClick)
@@ -32,21 +30,38 @@ import YelpApi.Object.Business as Business
 import YelpApi.Object.Businesses as Businesses
 import YelpApi.Object
 
-
 type alias Response = Maybe BusinessesFragment
 
-queryArgs : Maybe String -> Query.SearchOptionalArguments -> Query.SearchOptionalArguments
-queryArgs searchTerm = (\args -> { args | term = fromMaybe searchTerm, location = Present "Guadalajara" })
+type alias QueryParams = {
+    term: Maybe String,
+    location: Geolocation}
 
-query : Maybe String -> SelectionSet Response RootQuery
-query searchTerm = (Query.search (queryArgs searchTerm)) businessesSelection
---    SelectionSet.succeed BusinessFragment
---        |> with (Query.search (identity { location = "Guadalajara" })
---            |> with Business.name
---            |> with Business.rating)
+locationFallback : Geolocation -> OptionalArgument String
+locationFallback location =
+    case location of
+        Nothing ->
+            Present "Guadalajara"
+        _ ->
+            Absent
 
+locationToOptionalArg : Geolocation -> { longitude: OptionalArgument Float, latitude: OptionalArgument Float }
+locationToOptionalArg location =
+    case location of
+        Nothing ->
+            { longitude = Absent, latitude = Absent }
+        Just { longitude, latitude } ->
+            { longitude = Present longitude, latitude = Present latitude }
 
---Query.search (identity { location = "Guadalajara" }) businessSelection
+queryArgs : QueryParams -> Query.SearchOptionalArguments -> Query.SearchOptionalArguments
+queryArgs params = (\args -> { args |
+    term = fromMaybe params.term,
+    sort_by = Present "rating",
+    longitude = (locationToOptionalArg params.location).longitude,
+    latitude = (locationToOptionalArg params.location).latitude,
+    location = locationFallback params.location })
+
+query : QueryParams -> SelectionSet Response RootQuery
+query params = (Query.search (queryArgs params)) businessesSelection
 
 type alias BusinessFragment = {
     name : Maybe String,
@@ -71,9 +86,9 @@ businessSelection =
         Business.name
         Business.rating
 
-makeRequest : Maybe String -> Cmd Msg
-makeRequest searchTerm =
-    searchTerm
+makeRequest : QueryParams -> Cmd Msg
+makeRequest params =
+    params
         |> query
         |> Graphql.Http.queryRequest "https://cors-anywhere.herokuapp.com/https://api.yelp.com/v3/graphql"
         |> Graphql.Http.withHeader "Accept-Language" "en_US"
@@ -88,21 +103,24 @@ type alias YelpModel =
 
 ---- MODEL ----
 
+type alias Geolocation = Maybe { longitude: Float, latitude: Float }
 
 type alias Model =
     {
+    location: Geolocation,
     counter : Int,
     yelpData: Maybe BusinessesFragment -- TODO support response here to handle errors
     }
 
 
-init : flags -> ( Model, Cmd Msg )
-init _ =
+init : Geolocation -> ( Model, Cmd Msg )
+init flags =
   ( {
+  location = flags,
   counter = 0,
 --  yelpData = RemoteData.Loading
   yelpData = Maybe.Nothing
-  }, makeRequest Nothing )
+  }, makeRequest { term = Nothing, location = flags })
 
 
 ---- UPDATE ----
@@ -120,7 +138,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Change value ->
-            (model, makeRequest (Just value))
+            (model, makeRequest ({ term = Just value, location = model.location }))
         NoOp ->
             (model, Cmd.none)
 
@@ -187,15 +205,18 @@ view model =
                 attribute "debounce" "1000",
                 Ion.ionChange Change
             ] []
+            , Html.div [] [ text ("total results near you:" ++ String.fromInt (
+                Maybe.withDefault 0 (
+                    Maybe.withDefault emptyBusinessesFragment model.yelpData).total))]
             , lazy yelpResultsView (model.yelpData |> Maybe.withDefault emptyBusinessesFragment)
-            , div []
-                [ Html.p [] [ text ("Elm is here! results:" ++ String.fromInt (
-                    Maybe.withDefault 0 (
-                        Maybe.withDefault emptyBusinessesFragment model.yelpData).total)) ]
-                , Ion.button [ onClick Increment ] [ text "+" ]
-                , Ion.button [ onClick Decrement ] [ text "-" ]
-                , lazy viewCount model.counter
-                ]
+--            , div []
+--                [ Html.p [] [ text ("Elm is here! results:" ++ String.fromInt (
+--                    Maybe.withDefault 0 (
+--                        Maybe.withDefault emptyBusinessesFragment model.yelpData).total)) ]
+--                , Ion.button [ onClick Increment ] [ text "+" ]
+--                , Ion.button [ onClick Decrement ] [ text "-" ]
+--                , lazy viewCount model.counter
+--                ]
         ]
 --    ]
 --    Ion.app []
@@ -225,7 +246,7 @@ view model =
 --            , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
 --        ]
 
-main : Program () Model Msg
+main : Program Geolocation Model Msg
 main =
     Browser.element
         { init = init
