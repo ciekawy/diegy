@@ -34,7 +34,7 @@ function loadElmJson() {
   return {};
 }
 
-const envPublicUrl = process.env.PUBLIC_URL;
+const envPublicUrl = './'; //process.env.PUBLIC_URL;
 
 function ensureSlash(path, needsSlash) {
   const hasSlash = path.endsWith('/');

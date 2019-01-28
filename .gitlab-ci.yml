@@ -8,8 +8,6 @@ pages:
     - npm i
     - npm run build --prod
     - mv build public
-  environment:
-    PUBLIC_URL: "./"
   artifacts:
     paths:
       - public
