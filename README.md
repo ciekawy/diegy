@@ -22,6 +22,8 @@ and some Ionic components (i.e. `ion-item`, `ion-header`) are being transformed 
  
 ## possible TODO
 - polish Elm code :)
+- loading indicator
+- caching current results between PWA launches
 - provide more details from search (address, distance)
 - change location
 - paginated queries

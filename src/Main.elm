@@ -188,63 +188,16 @@ yelpResultsView yelp =
 
 view : Model -> Html Msg
 view model =
---    div []
---        [ Ion.header []
---            [ Ion.toolbar [ Ion.color "primary" ]
---                [ Ion.title []
---                    [ text "Diegy" ]
---                ]
---            , Ion.toolbar []
---                [ Ion.searchbar []
---                    []
---                ]
---            ]
---        ,
         div [] [
             Ion.searchbar [
-                attribute "debounce" "1000",
+                attribute "debounce" "600",
                 Ion.ionChange Change
             ] []
-            , Html.div [] [ text ("total results near you:" ++ String.fromInt (
+            , Html.div [] [ text ("results near you (total " ++ String.fromInt (
                 Maybe.withDefault 0 (
-                    Maybe.withDefault emptyBusinessesFragment model.yelpData).total))]
+                    Maybe.withDefault emptyBusinessesFragment model.yelpData).total) ++ "):")]
             , lazy yelpResultsView (model.yelpData |> Maybe.withDefault emptyBusinessesFragment)
---            , div []
---                [ Html.p [] [ text ("Elm is here! results:" ++ String.fromInt (
---                    Maybe.withDefault 0 (
---                        Maybe.withDefault emptyBusinessesFragment model.yelpData).total)) ]
---                , Ion.button [ onClick Increment ] [ text "+" ]
---                , Ion.button [ onClick Decrement ] [ text "-" ]
---                , lazy viewCount model.counter
---                ]
         ]
---    ]
---    Ion.app []
---        [ Ion.header []
---            [ Ion.toolbar [ Ion.color "primary" ]
---                [ Ion.title []
---                    [ text "Diegy" ]
---                ]
---            , Ion.toolbar []
---                [ Ion.searchbar []
---                    []
---                ]
---            ]
---        , Ion.content [ attribute "padding" "" ]
---            [ Ion.list []
---                [ Ion.header []
---                    [ text "results:" ]
---                , Ion.item []
---                    [ h2 [] [ text <| "Count is " ++ String.fromInt model.counter ]
---                    , h4 [] [ text "score: {{score}}" ]
---                    , p [] [ text "{{description}}" ]
---                    ]
---                ]
---            ]
---            , Ion.button [ onClick Increment ] [ text "+" ]
---            , Ion.button [ onClick Decrement ] [ text "-" ]
---            , Html.p [] [ text <| "Count is " ++ String.fromInt model.counter ]
---        ]
 
 main : Program Geolocation Model Msg
 main =
