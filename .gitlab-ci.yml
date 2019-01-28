@@ -7,6 +7,7 @@ pages:
     - echo PUBLIC_URL $PUBLIC_URL
     - npm i
     - npm run build --prod
+    - node append-ga.js
     - rm -rf public
     - mv build public
   artifacts:
