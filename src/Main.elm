@@ -200,7 +200,7 @@ view model =
 --                ]
 --            ]
 --        ,
-        Ion.content [] [
+        div [] [
             Ion.searchbar [
                 attribute "debounce" "1000",
                 Ion.ionChange Change

@@ -1,6 +1,6 @@
 {
-  "short_name": "Elm App",
-  "name": "Create Elm App Sample",
+  "short_name": "Diegy",
+  "name": "Demo of Ionic Elm GraphQL Yelp api",
   "icons": [
     {
       "src": "favicon.ico",

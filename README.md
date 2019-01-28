@@ -1,5 +1,33 @@
 # Elm App - integration with Ionic v4 GraphQL and Yelp GraphQL API
 
+The purpose of this project is to check [Ionic v4](https://github.com/ionic-team/ionic/) ability to 
+integrate with any framework. I found it as a great opportunity to play with [Elm](https://elm-lang.org/)
+ and try integrating it with [Yelp GraphQL](https://www.yelp.com/developers/graphql/guides/intro) api.
+
+It is a PWA app (you can add it into a home screen) which can be easily turned into a regular (hybrid 
+cordova) app for iOS, Android but also desktop is possible using [Electron](https://electronjs.org/docs/tutorial/first-app).   
+
+App is using Yelp GraphQL api to query for all the nearby businesses. Search box can be used to re-query
+using own term.
+
+Live version is available on https://diegy.gitlab.io/ 
+
+### key challenges so far
+- getting know Elm (from zero)
+- there is apparently an incompatibility between Elm and Ionic on how they interact with DOM. Elm is expecting to own the DOM 
+and some Ionic components (i.e. `ion-item`, `ion-header`) are being transformed which makes Elm unable to track the original DOM structure resulting in
+`Uncaught TypeError: Cannot read property 'childNodes' of undefined`. This seems to be a blocker for regular use of Ionic and Elm together.
+- use Elm code generated from GraphQL schema to write correct code.
+- not possible to authenticate to Yelp api out of the box due to CORS/OPTIONS request returning 403.
+ 
+## possible TODO
+- provide more details from search (address, distance)
+- change location
+- paginated queries
+- choose to sort by other fields (i.e. distance)
+
+
+# Original Elm App generated readme:
 This project is bootstrapped with [Create Elm App](https://github.com/halfzebra/create-elm-app).
 
 Below you will find some information on how to perform basic tasks.
