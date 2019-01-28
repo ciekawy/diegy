@@ -21,10 +21,12 @@ and some Ionic components (i.e. `ion-item`, `ion-header`) are being transformed 
 - not possible to authenticate to Yelp api out of the box due to CORS/OPTIONS request returning 403.
  
 ## possible TODO
+- polish Elm code :)
 - provide more details from search (address, distance)
 - change location
 - paginated queries
 - choose to sort by other fields (i.e. distance)
+- add some menu with info about the app
 
 
 # Original Elm App generated readme:
