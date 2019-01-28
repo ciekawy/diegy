@@ -1,10 +1,15 @@
 image: node:10
 
 pages:
+  variables:
+    PUBLIC_URL: "./"
   script:
+    - echo PUBLIC_URL $PUBLIC_URL
     - npm i
-    - PUBLIC_URL=./ npm run build --prod
+    - npm run build --prod
     - mv build public
+  environment:
+    PUBLIC_URL: "./"
   artifacts:
     paths:
       - public
