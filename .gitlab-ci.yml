@@ -2,6 +2,7 @@ image: node:10
 
 pages:
   script:
+    - npm i
     - PUBLIC_URL=./ npm run build --prod
     - mv build public
   artifacts:
