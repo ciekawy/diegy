@@ -16,7 +16,13 @@ function geolocationCallback(result) {
       longitude: result.coords.longitude,
       latitude: result.coords.latitude
     }
+  } else {
+    flags = {
+      longitude: 11.0,
+      latitude: 48.1
+    }
   }
+
   Elm.Main.init({
     node: document.getElementById('root'),
     flags
@@ -26,4 +32,7 @@ function geolocationCallback(result) {
 // const modules = ['Geolocation'];
 // PortFunnel.subscribe(app, {modules: modules});
 
-registerServiceWorker();
+// ignore for none-browser environment (electron)
+if (window.location.protocol !== 'file:') {
+  registerServiceWorker();
+}
