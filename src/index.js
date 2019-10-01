@@ -17,10 +17,7 @@ function geolocationCallback(result) {
       latitude: result.coords.latitude
     }
   } else {
-    flags = {
-      longitude: 11.0,
-      latitude: 48.1
-    }
+    flags = null;
   }
 
   Elm.Main.init({
