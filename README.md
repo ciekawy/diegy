@@ -1,25 +1,25 @@
 # Elm App - integration with Ionic v4 GraphQL and Yelp GraphQL API
 
-The purpose of this project is to check [Ionic v4](https://github.com/ionic-team/ionic/) ability to 
+The purpose of this project is to check [Ionic v4](https://github.com/ionic-team/ionic/) ability to
 integrate with any framework. I found it as a great opportunity to play with [Elm](https://elm-lang.org/)
  and try integrating it with [Yelp GraphQL](https://www.yelp.com/developers/graphql/guides/intro) api.
 
-It is a PWA app (you can add it into a home screen) which can be easily turned into a regular (hybrid 
+It is a PWA app (you can add it into a home screen) which can be easily turned into a regular (hybrid
 cordova) app for iOS, Android but also desktop is possible using [Electron](https://electronjs.org/docs/tutorial/first-app).   
 
 App is using Yelp GraphQL api to query for all the nearby businesses. Search box can be used to re-query
 using own term.
 
-Live version is available on https://diegy.gitlab.io/ 
+Live version is available on https://diegy.gitlab.io/
 
 ### key challenges so far
 - getting know Elm (from zero)
-- there is apparently an incompatibility between Elm and Ionic on how they interact with DOM. Elm is expecting to own the DOM 
+- there is apparently an incompatibility between Elm and Ionic on how they interact with DOM. Elm is expecting to own the DOM
 and some Ionic components (i.e. `ion-item`, `ion-header`) are being transformed which makes Elm unable to track the original DOM structure resulting in
 `Uncaught TypeError: Cannot read property 'childNodes' of undefined`. This seems to be a blocker for regular use of Ionic and Elm together.
 - use Elm code generated from GraphQL schema to write correct code.
 - not possible to authenticate to Yelp api out of the box due to CORS/OPTIONS request returning 403.
- 
+
 ## possible TODO
 - polish Elm code :)
 - loading indicator
@@ -30,6 +30,8 @@ and some Ionic components (i.e. `ion-item`, `ion-header`) are being transformed 
 - choose to sort by other fields (i.e. distance)
 - add some menu with info about the app
 
+## Troubleshooting Electron
+- `ERR_FILE_NOT_FOUND`: consider defining `PUBLIC_URL=./` environment variable
 
 # Original Elm App generated readme:
 This project is bootstrapped with [Create Elm App](https://github.com/halfzebra/create-elm-app).
@@ -811,7 +813,7 @@ Mutate the configuration directly or use [webpack-merge](https://www.npmjs.com/p
 `env` variable will help you distinguish `"development"` from `"production"` for environment-specific overrides.
 
 ## Configuring the Proxy Manually
- 
+
 If the `proxy` option is not flexible enough for you, you can get direct access to the Express app instance and hook up your own proxy middleware.
 
 You can use this feature in conjunction with the `proxy` property in `elmapp.config.js`, but it is recommended you consolidate all of your logic into `setupProxy` property`.
